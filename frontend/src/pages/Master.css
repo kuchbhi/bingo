@@ -1,0 +1,275 @@
+.master-container {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.header {
+    margin-bottom: 30px;
+}
+
+.controls {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.draw-btn {
+    background: linear-gradient(45deg, #ff00cc, #333399);
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 15px 40px;
+}
+
+.redo-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.pause-btn {
+    background: #f39c12;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 15px 40px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.pause-btn:hover {
+    background: #e67e22;
+}
+
+.pause-btn.paused {
+    background: #27ae60;
+}
+
+.pause-btn.paused:hover {
+    background: #2ecc71;
+}
+
+.countdown {
+    margin-top: 15px;
+    font-size: 1.5rem;
+    color: #fff;
+    font-weight: bold;
+}
+
+.countdown span {
+    color: #e94560;
+    font-size: 2rem;
+    margin: 0 5px;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 300px 1fr 250px;
+    gap: 30px;
+    align-items: start;
+}
+
+.left-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.current-draw {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.winners-list {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.winners-list h3 {
+    margin-bottom: 15px;
+    color: #ffd700;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.no-winners {
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+}
+
+.winners-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.winner-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    margin-bottom: 8px;
+    border-radius: 8px;
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.winner-name {
+    font-weight: bold;
+    color: #fff;
+}
+
+.winner-type {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: #e94560;
+    color: white;
+}
+
+.big-number {
+    font-size: 8rem;
+    font-weight: 900;
+    background: -webkit-linear-gradient(#eee, #333);
+    -webkit-background-clip: text;
+    /* -webkit-text-fill-color: transparent; */
+    /* Optional for gradient text */
+    color: #fff;
+    text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+}
+
+.comic-text {
+    font-size: 1.5rem;
+    color: #e94560;
+    margin-top: 10px;
+    font-style: italic;
+    min-height: 2em;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    border-radius: 16px;
+}
+
+.board-number {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.5);
+    transition: all 0.3s;
+}
+
+.board-number.drawn {
+    background: #0f3460;
+    color: #fff;
+    box-shadow: 0 0 10px rgba(15, 52, 96, 0.5);
+}
+
+.board-number.current {
+    background: #e94560;
+    color: #fff;
+    transform: scale(1.2);
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(233, 69, 96, 0.8);
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(233, 69, 96, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(233, 69, 96, 0);
+    }
+}
+
+.qr-section {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    color: black;
+}
+
+.countdown-small {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    color: #ddd;
+    font-weight: bold;
+}
+
+.countdown-small span {
+    color: #e94560;
+    font-size: 1.5rem;
+    margin: 0 5px;
+}
+
+.winner-rank {
+    font-weight: bold;
+    color: #ffd700;
+    margin-right: 10px;
+    font-size: 1.1rem;
+}
+
+.game-over {
+    text-align: center;
+    animation: fadeIn 1s ease-in;
+}
+
+.game-over h2 {
+    font-size: 3rem;
+    color: #e94560;
+    margin-bottom: 10px;
+}
+
+.game-over p {
+    font-size: 1.5rem;
+    color: #fff;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
