@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles # Keep this import, but we won't use the mount for '/'
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from gtts import gTTS
 import io
@@ -29,26 +29,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- OLD ISSUE: app.mount was here, claiming '/' for GET only, blocking POST /start_session ---
-# app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="static")
-
-
 # --- Pydantic Model for validation ---
 class SecretID(BaseModel):
     """Model to enforce input structure for the secret ID."""
     secret_id: str
 
-# --- FastAPI Endpoints ---
-
-@app.get("/")
-async def root():
-    """
-    Serves the main index.html file for the frontend.
-    This explicit FileResponse ensures that the root GET request
-    is handled by FastAPI, allowing other API POST/GET routes to function.
-    """
-    # NOTE: The path must be correct relative to where the command is executed (usually the repo root)
-    return FileResponse("frontend/dist/index.html", media_type="text/html")
+# --- CORE API ENDPOINTS ---
 
 @app.post("/start_session")
 async def start_session(id_data: SecretID):
@@ -70,8 +56,6 @@ async def tts(text: str, lang: str = "en"):
     """Text-to-Speech service for announcing numbers."""
     try:
         # Generate TTS using gTTS (Google Text-to-Speech)
-        # Note: This endpoint does not require session_started to be True, 
-        # as the master might want to test TTS before starting the game.
         tts = gTTS(text=text, lang='en', tld='us')
         
         # Save to memory buffer
@@ -84,8 +68,9 @@ async def tts(text: str, lang: str = "en"):
         print(f"TTS Error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- Socket.IO Events ---
 
+# --- Socket.IO Events (No Change) ---
+# ... (sio event handlers here) ...
 @sio.event
 async def connect(sid, environ):
     """Handle client connections."""
@@ -128,10 +113,36 @@ async def master_draw(sid, data):
     # Broadcast to all players
     await sio.emit('number_drawn', data)
 
-# --- Final Static File Catch-All ---
-# Mounting StaticFiles at the end and at the root path (`/`) 
-# will act as a final catch-all for all other files (CSS, JS, images, favicon.ico)
-# that haven't been claimed by specific routes like /, /start_session, or /tts.
+
+# --- FRONTEND SERVING LOGIC (MUST BE AT THE END) ---
+
+# 1. Route for the root path (serves Master UI initially)
+@app.get("/")
+async def root():
+    """Serves the main index.html file for the frontend."""
+    # This also handles API health check and initial page load
+    return FileResponse("frontend/dist/index.html", media_type="text/html")
+
+# 2. SPA FALLBACK ROUTE: The fix for /player, /master, etc.
+# This must come BEFORE the final StaticFiles mount.
+@app.get("/{full_path:path}")
+async def serve_frontend_routes(full_path: str):
+    """
+    Catch-all route to serve index.html for any path not claimed by an API endpoint.
+    This enables client-side routing (React Router) to work.
+    """
+    # Check if the path is NOT a file extension (like .css, .js) that StaticFiles should handle
+    # This is a basic optimization, but the order should handle most cases.
+    if "." not in full_path:
+        return FileResponse("frontend/dist/index.html", media_type="text/html")
+    
+    # If it contains a dot (e.g., '/assets/main.js'), let the StaticFiles below handle it.
+    # If the file is not found by StaticFiles, it will result in a 404, which is correct.
+    raise HTTPException(status_code=404, detail="Not Found")
+
+
+# 3. Final Static Files Catch-All: Serves the actual JS, CSS, images
+# This must be the very last thing, so it only serves files that don't match other routes.
 app.mount("/", StaticFiles(directory="frontend/dist"), name="static")
 
 
