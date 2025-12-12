@@ -44,7 +44,10 @@ const Master = () => {
         setGameUrl(`${window.location.protocol}//${host}/player`);
 
         // Connect to socket
-        socketRef.current = io(API_URL);
+        socketRef.current = io(API_URL, {
+            transports: ['websocket'], // Force WebSocket protocol
+            upgrade: false             // Prevents the initial polling attempt
+        });
 
         socketRef.current.on('bingo_win', (data) => {
             // Add new winner to top of list
