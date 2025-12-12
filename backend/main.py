@@ -114,36 +114,26 @@ async def master_draw(sid, data):
     await sio.emit('number_drawn', data)
 
 
-# --- FRONTEND SERVING LOGIC (MUST BE AT THE END) ---
+# ... (All API routes and Socket.IO events are defined above) ...
 
-# 1. Route for the root path (serves Master UI initially)
-@app.get("/")
-async def root():
-    """Serves the main index.html file for the frontend."""
-    # This also handles API health check and initial page load
-    return FileResponse("frontend/dist/index.html", media_type="text/html")
+# --- NEW FRONTEND SERVING LOGIC (MUST BE AT THE END) ---
 
-# 2. SPA FALLBACK ROUTE: The fix for /player, /master, etc.
-# This must come BEFORE the final StaticFiles mount.
+# 1. Mount Static Files at the root path (`/`). 
+# This handles ALL requests, prioritizing files in 'frontend/dist/'.
+# If 'index.html' is present, it will be served for requests to the root path.
+app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="static")
+
+# 2. SPA Fallback: This MUST be the final route. 
+# It catches all remaining requests (like /player, /master, etc.) that the 
+# StaticFiles mount didn't find as a physical file, and redirects them to index.html.
+# We must place this route AFTER the StaticFiles mount to allow assets to be found.
 @app.get("/{full_path:path}")
 async def serve_frontend_routes(full_path: str):
     """
-    Catch-all route to serve index.html for any path not claimed by an API endpoint.
-    This enables client-side routing (React Router) to work.
+    Catch-all route to serve index.html for any path not claimed by an API endpoint or 
+    a static file (CSS/JS/etc.). This enables client-side routing (React Router) to work.
     """
-    # Check if the path is NOT a file extension (like .css, .js) that StaticFiles should handle
-    # This is a basic optimization, but the order should handle most cases.
-    if "." not in full_path:
-        return FileResponse("frontend/dist/index.html", media_type="text/html")
-    
-    # If it contains a dot (e.g., '/assets/main.js'), let the StaticFiles below handle it.
-    # If the file is not found by StaticFiles, it will result in a 404, which is correct.
-    raise HTTPException(status_code=404, detail="Not Found")
-
-
-# 3. Final Static Files Catch-All: Serves the actual JS, CSS, images
-# This must be the very last thing, so it only serves files that don't match other routes.
-app.mount("/", StaticFiles(directory="frontend/dist"), name="static")
+    return FileResponse("frontend/dist/index.html", media_type="text/html")
 
 
 if __name__ == "__main__":
