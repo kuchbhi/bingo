@@ -18,7 +18,15 @@ session_started = False
 app = FastAPI()
 
 # Create Socket.IO server (Async)
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
+# sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
+# Create Socket.IO server (Async)
+sio = socketio.AsyncServer(
+    async_mode='asgi', 
+    cors_allowed_origins='*',
+    ping_timeout=200,       # How long to wait for client pong before disconnecting
+    ping_interval=15       # Send a ping every 25 seconds (less than Render's typical 60s timeout)
+)
+
 socket_app = socketio.ASGIApp(sio, app)
 
 app.add_middleware(
