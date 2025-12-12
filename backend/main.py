@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.staticfiles import StaticFiles # Keep this import, but we won't use the mount for '/'
 from pydantic import BaseModel
 from gtts import gTTS
 import io
@@ -29,7 +29,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="static")
+# --- OLD ISSUE: app.mount was here, claiming '/' for GET only, blocking POST /start_session ---
+# app.mount("/", StaticFiles(directory="frontend/dist", html=True), name="static")
+
 
 # --- Pydantic Model for validation ---
 class SecretID(BaseModel):
@@ -40,9 +42,13 @@ class SecretID(BaseModel):
 
 @app.get("/")
 async def root():
-    # Show the current session status
-    status = "Active" if session_started else "Pending Authorization"
-    return {"message": "Bingo Backend Running", "session_status": status}
+    """
+    Serves the main index.html file for the frontend.
+    This explicit FileResponse ensures that the root GET request
+    is handled by FastAPI, allowing other API POST/GET routes to function.
+    """
+    # NOTE: The path must be correct relative to where the command is executed (usually the repo root)
+    return FileResponse("frontend/dist/index.html", media_type="text/html")
 
 @app.post("/start_session")
 async def start_session(id_data: SecretID):
@@ -122,6 +128,12 @@ async def master_draw(sid, data):
     # Broadcast to all players
     await sio.emit('number_drawn', data)
 
+# --- Final Static File Catch-All ---
+# Mounting StaticFiles at the end and at the root path (`/`) 
+# will act as a final catch-all for all other files (CSS, JS, images, favicon.ico)
+# that haven't been claimed by specific routes like /, /start_session, or /tts.
+app.mount("/", StaticFiles(directory="frontend/dist"), name="static")
+
 
 if __name__ == "__main__":
     import uvicorn
@@ -131,6 +143,3 @@ if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")
     
     uvicorn.run(socket_app, host=host, port=port)
-
-    # Run the socket_app which wraps the FastAPI app
-    # uvicorn.run(socket_app, host="0.0.0.0", port=8000)
