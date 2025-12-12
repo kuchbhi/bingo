@@ -25,7 +25,10 @@ const Player = () => {
 
     useEffect(() => {
         // Connect to socket
-        socketRef.current = io(API_URL);
+        socketRef.current = io(API_URL, {
+            transports: ['websocket'], // Force WebSocket protocol
+            upgrade: false             // Prevents the initial polling attempt
+        });
 
         socketRef.current.on('number_drawn', (data) => {
             setCalledNumbers(prev => [...prev, data.number]);
